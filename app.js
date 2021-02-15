@@ -3,20 +3,19 @@ const bodyParser=require('body-parser')
 const mongoose=require('mongoose')
 const date=require(__dirname+'/date.js')
 
-
 const app=express()
 app.set('view engine','ejs')
 app.use(bodyParser.urlencoded({extended:true}))
 app.use(express.static('public'))
-// let items=['Buy Food','Cook Food', 'Eat Food'];
-// let workItems=[];
 
-mongoose.connect('mongodb://localhost:27017/todolistDB')
+// connect to database
+mongoose.connect('mongodb://localhost:27017/todolistDB',{ useUnifiedTopology: true,useNewUrlParser: true } )
 const itemsSchema={
     name:String
 };
 const Item=mongoose.model('Item',itemsSchema);
 
+//default items
 const item1=new Item({
     name: 'Welcome to your to-do list'
 })
@@ -30,22 +29,25 @@ const item3=new Item({
 })
 const defaultItems=[item1,item2,item3]
 
-Item.insertMany(defaultItems, (error)=>{
+
+//get command, inital rendering
+app.get ('/', (req,res)=>{
+    Item.find({},function(err,foundItems){
+       if (foundItems.length===0){
+    Item.insertMany(defaultItems, (error)=>{
     if(error){
         console.log(error)
     } else {
         console.log("success")
-    }
-})
-Item.deleteOne({ id:'6029c9b66de3578d45a0a627'}, function (err) {
-    if (err) return handleError(err);
-    // deleted at most one tank document
-  });
-
-app.get ('/', (req,res)=>{
-    let day=date.getDate()
-    res.render('list',{listTitle:"today", newListItem:items})   
-
+    }   
+}) ; 
+res.redirect('/')
+}
+else {
+    res.render('list',{listTitle:"today", newListItem:foundItems})  
+}  })
+  
+//get command to other pages
 app.get('/work', (req,res)=>{
 res.render('list',{listTitle:"work list", newListItem:workItems})
 })
@@ -54,22 +56,37 @@ app.get('/about', (req,res)=>{
     res.render('about')
 })
 
+// post commend,add new items
    app.post('/',function(req,res){
-    let item=req.body.newItem
 
+    const itemName=req.body.newItem
+    const newItem= new Item({
+        name: itemName
+    })
     if (req.body.list==='work')
     {
         workItems.push(item)
         res.redirect('/work')
     }
-    else{item=req.body.newItem;
-       items.push(item)
+    else{
+        Item.create(newItem)
        res.redirect('/')
     }
        
    })
 })
 
+app.post('/delete', (req,res)=>{
+    const checkedbox= req.body.checkbox
+    Item.findByIdAndDelete(checkedbox,(err)=>{
+        if(err){
+            console.log(err)
+        } else{
+            console.log('success')
+        }
+    })
+    res.redirect('/')
+})
 
 app.listen(3000,()=>{
     console.log('Server started at port 3000')
