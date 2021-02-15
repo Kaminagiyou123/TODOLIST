@@ -29,6 +29,11 @@ const item3=new Item({
 })
 const defaultItems=[item1,item2,item3]
 
+const listSchema={
+    name:String,
+    items:[itemsSchema]
+}
+const List=mongoose.model('List', listSchema)
 
 //get command, inital rendering
 app.get ('/', (req,res)=>{
@@ -45,36 +50,26 @@ res.redirect('/')
 }
 else {
     res.render('list',{listTitle:"today", newListItem:foundItems})  
-}  })
-  
+}  })})
+
 //get command to other pages
-app.get('/work', (req,res)=>{
-res.render('list',{listTitle:"work list", newListItem:workItems})
-})
-   
-app.get('/about', (req,res)=>{
-    res.render('about')
-})
-
-// post commend,add new items
-   app.post('/',function(req,res){
-
-    const itemName=req.body.newItem
-    const newItem= new Item({
-        name: itemName
-    })
-    if (req.body.list==='work')
-    {
-        workItems.push(item)
-        res.redirect('/work')
-    }
-    else{
-        Item.create(newItem)
-       res.redirect('/')
-    }
-       
-   })
-})
+app.get("/:customListName",(req,res)=>{
+   const customListName=req.params.customListName;
+   console.log(customListName)
+   List.findOne({name:customListName},(err,foundList)=>{
+if (!err){
+if (!foundList){
+    const list =new List({
+       name:customListName,
+       items:defaultItems
+   });
+   list.save();
+   res.redirect('/'+customListName)
+} else {
+    res.render('list', {listTitle:foundList.name, newListItem:foundList.items})  
+}}
+   })  
+});
 
 app.post('/delete', (req,res)=>{
     const checkedbox= req.body.checkbox
