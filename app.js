@@ -37,7 +37,10 @@ Item.insertMany(defaultItems, (error)=>{
         console.log("success")
     }
 })
-
+Item.deleteOne({ id:'6029c9b66de3578d45a0a627'}, function (err) {
+    if (err) return handleError(err);
+    // deleted at most one tank document
+  });
 
 app.get ('/', (req,res)=>{
     let day=date.getDate()
