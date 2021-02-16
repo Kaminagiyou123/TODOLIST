@@ -35,7 +35,7 @@ const listSchema={
 }
 const List=mongoose.model('List', listSchema)
 
-//get command, inital rendering
+//get command, inital rendering on home page
 app.get ('/', (req,res)=>{
     Item.find({},function(err,foundItems){
        if (foundItems.length===0){
@@ -70,6 +70,15 @@ if (!foundList){
 }}
    })  
 });
+
+app.post ('/',(req,res)=>{
+    const itemName=req.body.newItem;
+    const item=new Item({
+        name:itemName
+    });
+    item.save();
+    res.redirect('/')
+})
 
 app.post('/delete', (req,res)=>{
     const checkedbox= req.body.checkbox
