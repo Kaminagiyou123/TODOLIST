@@ -73,15 +73,26 @@ if (!foundList){
 
 app.post ('/',(req,res)=>{
     const itemName=req.body.newItem;
+    const listName=req.body.list
     const item=new Item({
         name:itemName
     });
-    item.save();
-    res.redirect('/')
+    if (listName==='today'){
+     item.save();
+    res.redirect('/');   
+    } else {
+        List.findOne({name:listName},(err,foundList)=>{
+            foundList.items.push(item);
+            foundList.save()
+          res.redirect('/'+listName) 
+        })
+    }  
 })
 
 app.post('/delete', (req,res)=>{
-    const checkedbox= req.body.checkbox
+    const checkedItemId= req.body.checkbox
+    const listName=req.body.listName;
+    if (listName==='today'){
     Item.findByIdAndDelete(checkedbox,(err)=>{
         if(err){
             console.log(err)
@@ -89,7 +100,15 @@ app.post('/delete', (req,res)=>{
             console.log('success')
         }
     })
-    res.redirect('/')
+    res.redirect('/')} else{
+        List.findOneAndUpdate({name:listName},
+            {$pull:{items:{_id:checkedItemId}}},
+            (err,foundList)=>{
+                if (!err)
+          {res.redirect('/'+listName) }
+        })
+    }
+
 })
 
 app.listen(3000,()=>{
